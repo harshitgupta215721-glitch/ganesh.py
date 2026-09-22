@@ -1,0 +1,109 @@
+import cv2
+import numpy as np
+import time
+
+# Load image
+img = cv2.imread("ganesh.jpg")
+
+if img is None:
+    print("Image not found!")
+    exit()
+
+# Convert to grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# Detect edges
+edges = cv2.Canny(gray, 80, 180)
+
+# Find contours
+contours, _ = cv2.findContours(
+    edges,
+    cv2.RETR_LIST,
+    cv2.CHAIN_APPROX_NONE
+)
+
+# Sort contours by length
+contours = sorted(
+    contours,
+    key=cv2.contourArea,
+    reverse=True
+)
+
+# Black canvas
+canvas = np.zeros(
+    (img.shape[0], img.shape[1], 3),
+    dtype=np.uint8
+)
+
+# Animation window
+cv2.namedWindow("Ganesh Bappa Animation", cv2.WINDOW_NORMAL)
+
+# Draw contour step by step
+for contour in contours:
+
+    # Ignore tiny unwanted lines
+    if len(contour) < 10:
+        continue
+
+    # Draw points gradually
+    for i in range(1, len(contour),10):
+
+        # Current drawing segment
+        points = contour[:i + 1]
+
+        # Orange line
+        cv2.polylines(
+            canvas,
+            [points],
+            False,
+            (0, 140, 255),
+            2
+        )
+
+        # White highlight
+        cv2.polylines(
+            canvas,
+            [points],
+            False,
+            (255, 255, 255),
+            1
+        )
+
+        # Glow
+        glow = cv2.GaussianBlur(
+            canvas,
+            (0, 0),
+            4
+        )
+
+        # Combine glow and drawing
+        output = cv2.addWeighted(
+            glow, 0.5,
+            canvas, 1,
+            0
+        )
+
+        # Display
+        cv2.imshow(
+            "Ganesh Bappa Animation",
+            output
+        )
+
+        # Drawing speed
+        key = cv2.waitKey(1)
+
+        # Press ESC to stop
+        if key == 27:
+            cv2.destroyAllWindows()
+            exit()
+
+# Final output
+cv2.imwrite(
+    "ganesh_animated_final.png",
+    canvas
+)
+
+print("Ganesh Drawing Completed!")
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
